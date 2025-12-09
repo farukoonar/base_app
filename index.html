@@ -3,11 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Breathing App</title>
+    <title>Breathing App - Gamified</title>
     <style>
+        /* --- 1. ADIM: CSS DEĞİŞKENLERİ (TEMALAR İÇİN) --- */
+        :root {
+            /* Varsayılan Tema (Cyber Blue) */
+            --bg-color: #121212;
+            --text-color: #fff;
+            --primary-color: #4facfe;
+            --secondary-color: #00f2fe;
+            --circle-bg: radial-gradient(circle, #4facfe 0%, #00f2fe 100%);
+            --btn-bg: linear-gradient(45deg, #4facfe, #00f2fe);
+            --shadow-color: rgba(79, 172, 254, 0.4);
+        }
+
+        /* ORMAN TEMASI */
+        body.theme-forest {
+            --bg-color: #0f2015;
+            --text-color: #e8f5e9;
+            --primary-color: #2ecc71;
+            --secondary-color: #27ae60;
+            --circle-bg: radial-gradient(circle, #2ecc71 0%, #27ae60 100%);
+            --btn-bg: linear-gradient(45deg, #2ecc71, #27ae60);
+            --shadow-color: rgba(46, 204, 113, 0.4);
+        }
+
+        /* GÜN BATIMI TEMASI */
+        body.theme-sunset {
+            --bg-color: #2c0e0e;
+            --text-color: #fff0f0;
+            --primary-color: #ff6b6b;
+            --secondary-color: #ff9f43;
+            --circle-bg: radial-gradient(circle, #ff9f43 0%, #ff6b6b 100%);
+            --btn-bg: linear-gradient(45deg, #ff9f43, #ff6b6b);
+            --shadow-color: rgba(255, 107, 107, 0.4);
+        }
+
         body {
-            background-color: #121212;
-            color: #fff;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -16,28 +50,96 @@
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
             overflow: hidden;
+            transition: background-color 0.5s, color 0.5s; /* Tema geçişi yumuşak olsun */
         }
 
-        /* ÜST BİLGİ ALANI (SET SAYACI) */
+        /* COIN GÖSTERGESİ */
+        .wallet-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .coin-icon { color: gold; }
+
+        /* MAĞAZA BUTONU */
+        .shop-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* MAĞAZA MODAL (PENCERE) */
+        .shop-modal {
+            display: none; /* Başlangıçta gizli */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid var(--primary-color);
+            padding: 20px;
+            border-radius: 15px;
+            width: 300px;
+            z-index: 100;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        .shop-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+        .buy-btn {
+            background: var(--primary-color);
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .buy-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .close-shop {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid #555;
+            color: #aaa;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* --- MEVCUT CSS KODLARI (GÜNCELLENMİŞ) --- */
         .stats-container {
             position: absolute;
-            top: 40px;
+            top: 80px; /* Biraz aşağı aldık */
             text-align: center;
             width: 100%;
         }
-        .stats-text {
-            font-size: 18px;
-            color: #888;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-        .set-count {
-            font-size: 32px;
-            font-weight: bold;
-            color: #4facfe;
-        }
+        .stats-text { font-size: 14px; opacity: 0.7; letter-spacing: 1px; }
+        .set-count { font-size: 24px; font-weight: bold; color: var(--primary-color); }
 
-        /* ANA DAİRE ALANI */
         .container {
             position: relative;
             width: 320px;
@@ -48,128 +150,89 @@
             margin-bottom: 40px;
         }
 
-        /* 1. KATMAN: NEFES DAİRESİ (ARKADA) */
         .breathing-circle {
             position: absolute;
             width: 200px;
             height: 200px;
-            background: radial-gradient(circle, #4facfe 0%, #00f2fe 100%);
+            background: var(--circle-bg); /* Değişken kullanıldı */
             border-radius: 50%;
             z-index: 1;
             opacity: 0.5;
-            transform: scale(1);
-            box-shadow: 0 0 30px rgba(79, 172, 254, 0.4);
+            box-shadow: 0 0 30px var(--shadow-color); /* Değişken kullanıldı */
         }
+        .container.running .breathing-circle { animation: breatheAnimation 19s linear infinite; }
 
-        /* Sadece 'running' class'ı eklendiğinde animasyon çalışır */
-        .container.running .breathing-circle {
-            animation: breatheAnimation 19s linear infinite;
-        }
-
-        /* 2. KATMAN: SVG ÇEMBER (SAYAÇ) */
         svg {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-            z-index: 2;
-            pointer-events: none;
+            top: 0; left: 0; width: 100%; height: 100%;
+            transform: rotate(-90deg); z-index: 2; pointer-events: none;
         }
-
-        .track {
-            fill: none;
-            stroke: #333;
-            stroke-width: 8;
-        }
-
+        .track { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
         .progress-ring {
-            fill: none;
-            stroke: #fff;
-            stroke-width: 8;
-            stroke-linecap: round;
-            stroke-dasharray: 942;
-            stroke-dashoffset: 942; /* Başlangıçta boş */
+            fill: none; stroke: var(--text-color); stroke-width: 8;
+            stroke-linecap: round; stroke-dasharray: 942; stroke-dashoffset: 942;
         }
+        .container.running .progress-ring { animation: progressAnimation 19s linear infinite; }
 
-        /* Sadece 'running' class'ı varken döner */
-        .container.running .progress-ring {
-            animation: progressAnimation 19s linear infinite;
-        }
-
-        /* 3. KATMAN: YAZILAR */
         .text-content {
-            position: absolute;
-            z-index: 3;
-            text-align: center;
+            position: absolute; z-index: 3; text-align: center;
             text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
+        h2 { font-size: 28px; margin: 0; text-transform: uppercase; letter-spacing: 2px; color: var(--text-color); }
+        .timer { font-size: 56px; font-weight: bold; margin: 0; color: var(--text-color); }
+        .cycle-info { font-size: 14px; opacity: 0.6; margin-top: 5px; }
 
-        h2 {
-            font-size: 28px;
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #fff;
-        }
-
-        .timer {
-            font-size: 56px;
-            font-weight: bold;
-            margin: 0;
-            color: #eee;
-        }
-
-        .cycle-info {
-            font-size: 14px;
-            color: #aaa;
-            margin-top: 5px;
-        }
-
-        /* BUTON STİLİ */
         .btn {
-            padding: 15px 40px;
-            font-size: 18px;
-            background: linear-gradient(45deg, #4facfe, #00f2fe);
-            border: none;
-            border-radius: 30px;
-            color: #fff;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
-            z-index: 10;
+            padding: 15px 40px; font-size: 18px;
+            background: var(--btn-bg); /* Değişken kullanıldı */
+            border: none; border-radius: 30px; color: #fff;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;
+            box-shadow: 0 4px 15px var(--shadow-color); /* Değişken kullanıldı */
+            transition: transform 0.2s; z-index: 10;
         }
+        .btn:active { transform: scale(0.95); }
+        .btn.stop { background: #ff4757; box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4); }
 
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn.stop {
-            background: linear-gradient(45deg, #ff6b6b, #ee5253);
-            box-shadow: 0 4px 15px rgba(238, 82, 83, 0.4);
-        }
-
-        /* --- ANIMASYONLAR --- */
-        @keyframes progressAnimation {
-            0% { stroke-dashoffset: 942; }
-            100% { stroke-dashoffset: 0; }
-        }
-
+        @keyframes progressAnimation { 0% { stroke-dashoffset: 942; } 100% { stroke-dashoffset: 0; } }
         @keyframes breatheAnimation {
-            0% { transform: scale(1); opacity: 0.5; }     /* Başlangıç */
-            21% { transform: scale(1.4); opacity: 1; }    /* 4. sn: Inhale Bitti */
-            58% { transform: scale(1.4); opacity: 1; }    /* 11. sn: Hold Bitti */
-            100% { transform: scale(1); opacity: 0.5; }   /* 19. sn: Exhale Bitti */
+            0% { transform: scale(1); opacity: 0.5; }
+            21% { transform: scale(1.4); opacity: 1; }
+            58% { transform: scale(1.4); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.5; }
         }
-
     </style>
 </head>
 <body>
-    
+
+    <div class="wallet-container">
+        <span class="coin-icon">●</span>
+        <span id="coin-display">0</span> Coins
+    </div>
+
+    <button class="shop-btn" onclick="openShop()">🎨 Themes</button>
+
+    <div class="shop-modal" id="shop-modal">
+        <h3 style="margin-top:0">Theme Store</h3>
+        <p style="font-size:12px; color:#aaa;">Complete sets to earn coins!</p>
+        
+        <div class="shop-item">
+            <span>Cyber Blue (Default)</span>
+            <button class="buy-btn" onclick="equipTheme('default')">EQUIP</button>
+        </div>
+
+        <div class="shop-item">
+            <span>Forest Green</span>
+            <button class="buy-btn" id="btn-forest" onclick="buyTheme('forest', 50)">50 Coins</button>
+        </div>
+
+        <div class="shop-item">
+            <span>Sunset Orange</span>
+            <button class="buy-btn" id="btn-sunset" onclick="buyTheme('sunset', 100)">100 Coins</button>
+        </div>
+
+        <button class="close-shop" onclick="closeShop()">Close</button>
+    </div>
+
     <div class="stats-container">
         <div class="stats-text">SETS COMPLETED</div>
         <div class="set-count" id="set-count">0</div>
@@ -177,12 +240,10 @@
 
     <div class="container" id="container">
         <div class="breathing-circle"></div>
-
         <svg viewBox="0 0 320 320">
             <circle class="track" cx="160" cy="160" r="150"></circle>
             <circle class="progress-ring" cx="160" cy="160" r="150"></circle>
         </svg>
-
         <div class="text-content">
             <h2 id="action-text">Ready</h2>
             <p class="timer" id="timer-text">0</p>
@@ -192,65 +253,130 @@
 
     <button class="btn" id="control-btn" onclick="toggleApp()">START</button>
 
-<script>
+    <script>
+        // --- DEĞİŞKENLER VE AYARLAR ---
         const container = document.getElementById('container');
         const actionText = document.getElementById('action-text');
         const timerText = document.getElementById('timer-text');
         const controlBtn = document.getElementById('control-btn');
         const setCountDisplay = document.getElementById('set-count');
         const cycleInfoDisplay = document.getElementById('cycle-info');
+        const coinDisplay = document.getElementById('coin-display');
+        const shopModal = document.getElementById('shop-modal');
 
-        // Süreleri milisaniye cinsinden de tutalım ki hassas olsun
-        const phases = [
-            { name: "Inhale", duration: 4 },
-            { name: "Hold", duration: 7 },
-            { name: "Exhale", duration: 8 }
-        ];
+        const phases = [ { name: "Inhale", duration: 4 }, { name: "Hold", duration: 7 }, { name: "Exhale", duration: 8 } ];
+
+        // --- VERİ YÖNETİMİ (DATABASE GİBİ) ---
+        // Coin, Set ve Temaları Hafızadan Çek
+        let totalSets = localStorage.getItem('sets') ? parseInt(localStorage.getItem('sets')) : 0;
+        let totalCoins = localStorage.getItem('coins') ? parseInt(localStorage.getItem('coins')) : 0;
+        let ownedThemes = localStorage.getItem('ownedThemes') ? JSON.parse(localStorage.getItem('ownedThemes')) : ['default'];
+        let currentTheme = localStorage.getItem('currentTheme') || 'default';
+
+        // İlk Yükleme Ayarları
+        setCountDisplay.innerText = totalSets;
+        coinDisplay.innerText = totalCoins;
+        applyTheme(currentTheme); // Son seçilen temayı yükle
+        updateShopUI(); // Mağaza butonlarını güncelle
 
         let isRunning = false;
-        let totalSets = 0;
         let currentCycle = 0;
-        
-        // Zamanlayıcı değişkenleri
-        let phaseTimeout = null; // Ana faz geçişi için
-        let countdownInterval = null; // Ekrandaki sayıyı azaltmak için
+        let phaseTimeout, countdownInterval;
 
-        function toggleApp() {
-            if (isRunning) {
-                stopApp();
+        // --- MAĞAZA VE TEMA SİSTEMİ ---
+        
+        function openShop() { shopModal.style.display = 'block'; }
+        function closeShop() { shopModal.style.display = 'none'; }
+
+        function buyTheme(themeName, cost) {
+            // Zaten sahipse, direkt kuşan
+            if (ownedThemes.includes(themeName)) {
+                equipTheme(themeName);
+                return;
+            }
+
+            // Sahip değilse ve parası yetiyorsa
+            if (totalCoins >= cost) {
+                if(confirm("Buy this theme for " + cost + " coins?")) {
+                    totalCoins -= cost; // Parayı düş
+                    ownedThemes.push(themeName); // Envantere ekle
+                    
+                    // Kaydet
+                    localStorage.setItem('coins', totalCoins);
+                    localStorage.setItem('ownedThemes', JSON.stringify(ownedThemes));
+                    
+                    // Arayüzü güncelle
+                    coinDisplay.innerText = totalCoins;
+                    updateShopUI();
+                    equipTheme(themeName); // Otomatik kuşan
+                }
             } else {
-                startApp();
+                alert("Not enough coins! Breathe more to earn.");
             }
         }
+
+        function equipTheme(themeName) {
+            // 1. Önce tüm tema classlarını sil
+            document.body.classList.remove('theme-forest', 'theme-sunset');
+            
+            // 2. Default değilse yeni temayı ekle
+            if (themeName !== 'default') {
+                document.body.classList.add('theme-' + themeName);
+            }
+            
+            // 3. Hafızaya kaydet
+            localStorage.setItem('currentTheme', themeName);
+            currentTheme = themeName;
+            updateShopUI();
+        }
+
+        function applyTheme(themeName) {
+            if (themeName !== 'default') document.body.classList.add('theme-' + themeName);
+        }
+
+        function updateShopUI() {
+            // Butonların yazılarını güncelle (BUY vs EQUIP)
+            checkButton('forest', 'btn-forest', 50);
+            checkButton('sunset', 'btn-sunset', 100);
+        }
+
+        function checkButton(theme, btnId, cost) {
+            const btn = document.getElementById(btnId);
+            if (ownedThemes.includes(theme)) {
+                btn.innerText = currentTheme === theme ? "EQUIPPED" : "EQUIP";
+                btn.style.background = currentTheme === theme ? "#555" : "#fff";
+                btn.style.color = currentTheme === theme ? "#fff" : "#000";
+            } else {
+                btn.innerText = cost + " Coins";
+            }
+        }
+
+
+        // --- OYUN MEKANİĞİ ---
+
+        function toggleApp() { isRunning ? stopApp() : startApp(); }
 
         function startApp() {
             isRunning = true;
             currentCycle = 0;
-            
             controlBtn.innerText = "STOP";
             controlBtn.classList.add('stop');
-            
-            // Animasyonu başlat
             container.classList.add('running');
-            
-            // İlk fazı hemen başlat
             runPhase(0);
         }
 
         function stopApp(finishedSet = false) {
             isRunning = false;
-            
-            // Tüm zamanlayıcıları temizle
             clearTimeout(phaseTimeout);
             clearInterval(countdownInterval);
-            
             container.classList.remove('running');
             controlBtn.innerText = "START";
             controlBtn.classList.remove('stop');
             
             if (finishedSet) {
                 actionText.innerText = "Set Done!";
-                timerText.innerText = "✓";
+                timerText.innerText = "+10"; // Ödül animasyonu gibi
+                cycleInfoDisplay.innerText = "Coins Earned!";
             } else {
                 actionText.innerText = "Ready";
                 timerText.innerText = "0";
@@ -261,56 +387,51 @@
         function runPhase(phaseIndex) {
             if (!isRunning) return;
 
-            // --- 1. DÖNGÜ KONTROLÜ ---
-            // Eğer fazlar bittiyse (Index 3 olduysa), başa dön
             if (phaseIndex >= phases.length) {
                 currentCycle++;
-                
-                // 4 Tur bitti mi?
                 if (currentCycle >= 4) {
-                    totalSets++;
-                    setCountDisplay.innerText = totalSets;
-                    stopApp(true);
+                    completeSet(); // Set bitince ödül ver
                     return;
                 }
-
-                // Bitmediyse Inhale'e (0) geri dön
                 phaseIndex = 0;
-                
-                // CSS Animasyonunu SIFIRLA (Loop noktası burası)
                 container.classList.remove('running');
-                void container.offsetWidth; // Tarayıcıyı kandırıp reflow tetikle
+                void container.offsetWidth; 
                 container.classList.add('running');
             }
 
-            // --- 2. EKRANI GÜNCELLE (HEMEN) ---
             const currentPhase = phases[phaseIndex];
-            
-            // Yazıları anında değiştir
             cycleInfoDisplay.innerText = `Cycle: ${currentCycle + 1}/4`;
             actionText.innerText = currentPhase.name;
             timerText.innerText = currentPhase.duration;
 
-            // --- 3. GELECEĞİ PLANLA (ZAMANLAMA) ---
-            
-            // A) Tam "duration" saniye sonra bir sonraki faza geçmek için emir ver
-            // (Bu kod, setInterval'ın 1 saniyelik hatasını ortadan kaldırır)
-            phaseTimeout = setTimeout(() => {
-                runPhase(phaseIndex + 1);
-            }, currentPhase.duration * 1000);
+            phaseTimeout = setTimeout(() => { runPhase(phaseIndex + 1); }, currentPhase.duration * 1000);
 
-            // B) Sadece ekrandaki sayıyı azaltmak için basit sayaç
             let timeLeft = currentPhase.duration;
-            
-            // Önceki sayacı temizle ki üst üste binmesin
             clearInterval(countdownInterval);
-            
             countdownInterval = setInterval(() => {
                 timeLeft--;
-                if (timeLeft >= 0) {
-                   timerText.innerText = timeLeft;
-                }
+                if (timeLeft >= 0) timerText.innerText = timeLeft;
             }, 1000);
+        }
+
+        function completeSet() {
+            // 1. İstatistikleri Artır
+            totalSets++;
+            
+            // 2. ÖDÜL MANTIĞI: Her set = 10 Coin
+            const reward = 1000;
+            totalCoins += reward;
+
+            // 3. Kaydet
+            localStorage.setItem('sets', totalSets);
+            localStorage.setItem('coins', totalCoins);
+
+            // 4. Güncelle
+            setCountDisplay.innerText = totalSets;
+            coinDisplay.innerText = totalCoins;
+            updateShopUI(); // Coin değiştiği için marketi güncelle
+
+            stopApp(true);
         }
     </script>
 </body>
