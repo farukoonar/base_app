@@ -1,21 +1,43 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eşit Hızlı Nefes Egzersizi</title>
+    <title>Breathing App</title>
     <style>
         body {
-            background-color: #1a1a1a;
+            background-color: #121212;
             color: #fff;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
+            overflow: hidden;
         }
 
+        /* ÜST BİLGİ ALANI (SET SAYACI) */
+        .stats-container {
+            position: absolute;
+            top: 40px;
+            text-align: center;
+            width: 100%;
+        }
+        .stats-text {
+            font-size: 18px;
+            color: #888;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .set-count {
+            font-size: 32px;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        /* ANA DAİRE ALANI */
         .container {
             position: relative;
             width: 320px;
@@ -23,9 +45,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            margin-bottom: 40px;
         }
 
-        /* 1. KATMAN: NEFES DAİRESİ */
+        /* 1. KATMAN: NEFES DAİRESİ (ARKADA) */
         .breathing-circle {
             position: absolute;
             width: 200px;
@@ -33,14 +56,17 @@
             background: radial-gradient(circle, #4facfe 0%, #00f2fe 100%);
             border-radius: 50%;
             z-index: 1;
-            opacity: 0.8;
+            opacity: 0.5;
+            transform: scale(1);
             box-shadow: 0 0 30px rgba(79, 172, 254, 0.4);
-            
-            /* DÜZELTME BURADA: 'ease-in-out' yerine 'linear' yapıldı */
+        }
+
+        /* Sadece 'running' class'ı eklendiğinde animasyon çalışır */
+        .container.running .breathing-circle {
             animation: breatheAnimation 19s linear infinite;
         }
 
-        /* 2. KATMAN: SVG ÇEMBER */
+        /* 2. KATMAN: SVG ÇEMBER (SAYAÇ) */
         svg {
             position: absolute;
             top: 0;
@@ -64,8 +90,11 @@
             stroke-width: 8;
             stroke-linecap: round;
             stroke-dasharray: 942;
-            stroke-dashoffset: 942;
-            /* Dış çizgi de sabit hızla dolsun diye linear */
+            stroke-dashoffset: 942; /* Başlangıçta boş */
+        }
+
+        /* Sadece 'running' class'ı varken döner */
+        .container.running .progress-ring {
             animation: progressAnimation 19s linear infinite;
         }
 
@@ -74,44 +103,79 @@
             position: absolute;
             z-index: 3;
             text-align: center;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         h2 {
-            font-size: 24px;
+            font-size: 28px;
             margin: 0;
             text-transform: uppercase;
             letter-spacing: 2px;
+            color: #fff;
         }
 
         .timer {
-            font-size: 48px;
+            font-size: 56px;
             font-weight: bold;
-            margin: 5px 0 0 0;
+            margin: 0;
+            color: #eee;
         }
 
-        /* --- KEYFRAMES --- */
+        .cycle-info {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 5px;
+        }
 
+        /* BUTON STİLİ */
+        .btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            border: none;
+            border-radius: 30px;
+            color: #fff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            z-index: 10;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn.stop {
+            background: linear-gradient(45deg, #ff6b6b, #ee5253);
+            box-shadow: 0 4px 15px rgba(238, 82, 83, 0.4);
+        }
+
+        /* --- ANIMASYONLAR --- */
         @keyframes progressAnimation {
             0% { stroke-dashoffset: 942; }
             100% { stroke-dashoffset: 0; }
         }
 
         @keyframes breatheAnimation {
-            /* linear kullandığımız için artık noktalar arası geçişler
-               tamamen düz ve eşit hızda olacak.
-            */
             0% { transform: scale(1); opacity: 0.5; }     /* Başlangıç */
-            21% { transform: scale(1.4); opacity: 1; }    /* 4. sn: Büyüdü */
-            58% { transform: scale(1.4); opacity: 1; }    /* 11. sn: Bekledi (Aynı boyutta kaldı) */
-            100% { transform: scale(1); opacity: 0.5; }   /* 19. sn: Küçüldü (Eşit hızla indi) */
+            21% { transform: scale(1.4); opacity: 1; }    /* 4. sn: Inhale Bitti */
+            58% { transform: scale(1.4); opacity: 1; }    /* 11. sn: Hold Bitti */
+            100% { transform: scale(1); opacity: 0.5; }   /* 19. sn: Exhale Bitti */
         }
 
     </style>
 </head>
 <body>
+    
+    <div class="stats-container">
+        <div class="stats-text">SETS COMPLETED</div>
+        <div class="set-count" id="set-count">0</div>
+    </div>
 
-    <div class="container">
+    <div class="container" id="container">
         <div class="breathing-circle"></div>
 
         <svg viewBox="0 0 320 320">
@@ -120,47 +184,134 @@
         </svg>
 
         <div class="text-content">
-            <h2 id="action-text">Hazır</h2>
+            <h2 id="action-text">Ready</h2>
             <p class="timer" id="timer-text">0</p>
+            <p class="cycle-info" id="cycle-info">Cycle: 0/4</p>
         </div>
     </div>
 
-    <script>
+    <button class="btn" id="control-btn" onclick="toggleApp()">START</button>
+
+<script>
+        const container = document.getElementById('container');
         const actionText = document.getElementById('action-text');
         const timerText = document.getElementById('timer-text');
-        
-        // 19 saniyelik fazlar
+        const controlBtn = document.getElementById('control-btn');
+        const setCountDisplay = document.getElementById('set-count');
+        const cycleInfoDisplay = document.getElementById('cycle-info');
+
+        // Süreleri milisaniye cinsinden de tutalım ki hassas olsun
         const phases = [
-            { name: "Nefes Al", duration: 4 },
-            { name: "Nefes Tut", duration: 7 },
-            { name: "Nefes Ver", duration: 8 }
+            { name: "Inhale", duration: 4 },
+            { name: "Hold", duration: 7 },
+            { name: "Exhale", duration: 8 }
         ];
 
-        function startBreathing() {
+        let isRunning = false;
+        let totalSets = 0;
+        let currentCycle = 0;
+        
+        // Zamanlayıcı değişkenleri
+        let phaseTimeout = null; // Ana faz geçişi için
+        let countdownInterval = null; // Ekrandaki sayıyı azaltmak için
+
+        function toggleApp() {
+            if (isRunning) {
+                stopApp();
+            } else {
+                startApp();
+            }
+        }
+
+        function startApp() {
+            isRunning = true;
+            currentCycle = 0;
+            
+            controlBtn.innerText = "STOP";
+            controlBtn.classList.add('stop');
+            
+            // Animasyonu başlat
+            container.classList.add('running');
+            
+            // İlk fazı hemen başlat
             runPhase(0);
         }
 
-        function runPhase(index) {
-            if (index >= phases.length) index = 0;
-
-            const currentPhase = phases[index];
-            actionText.innerText = currentPhase.name;
+        function stopApp(finishedSet = false) {
+            isRunning = false;
             
-            let timeLeft = currentPhase.duration;
-            timerText.innerText = timeLeft;
+            // Tüm zamanlayıcıları temizle
+            clearTimeout(phaseTimeout);
+            clearInterval(countdownInterval);
+            
+            container.classList.remove('running');
+            controlBtn.innerText = "START";
+            controlBtn.classList.remove('stop');
+            
+            if (finishedSet) {
+                actionText.innerText = "Set Done!";
+                timerText.innerText = "✓";
+            } else {
+                actionText.innerText = "Ready";
+                timerText.innerText = "0";
+                cycleInfoDisplay.innerText = "Cycle: 0/4";
+            }
+        }
 
-            const countDownInterval = setInterval(() => {
-                timeLeft--;
-                timerText.innerText = timeLeft;
+        function runPhase(phaseIndex) {
+            if (!isRunning) return;
+
+            // --- 1. DÖNGÜ KONTROLÜ ---
+            // Eğer fazlar bittiyse (Index 3 olduysa), başa dön
+            if (phaseIndex >= phases.length) {
+                currentCycle++;
                 
-                if (timeLeft <= 0) {
-                    clearInterval(countDownInterval);
-                    runPhase(index + 1);
+                // 4 Tur bitti mi?
+                if (currentCycle >= 4) {
+                    totalSets++;
+                    setCountDisplay.innerText = totalSets;
+                    stopApp(true);
+                    return;
+                }
+
+                // Bitmediyse Inhale'e (0) geri dön
+                phaseIndex = 0;
+                
+                // CSS Animasyonunu SIFIRLA (Loop noktası burası)
+                container.classList.remove('running');
+                void container.offsetWidth; // Tarayıcıyı kandırıp reflow tetikle
+                container.classList.add('running');
+            }
+
+            // --- 2. EKRANI GÜNCELLE (HEMEN) ---
+            const currentPhase = phases[phaseIndex];
+            
+            // Yazıları anında değiştir
+            cycleInfoDisplay.innerText = `Cycle: ${currentCycle + 1}/4`;
+            actionText.innerText = currentPhase.name;
+            timerText.innerText = currentPhase.duration;
+
+            // --- 3. GELECEĞİ PLANLA (ZAMANLAMA) ---
+            
+            // A) Tam "duration" saniye sonra bir sonraki faza geçmek için emir ver
+            // (Bu kod, setInterval'ın 1 saniyelik hatasını ortadan kaldırır)
+            phaseTimeout = setTimeout(() => {
+                runPhase(phaseIndex + 1);
+            }, currentPhase.duration * 1000);
+
+            // B) Sadece ekrandaki sayıyı azaltmak için basit sayaç
+            let timeLeft = currentPhase.duration;
+            
+            // Önceki sayacı temizle ki üst üste binmesin
+            clearInterval(countdownInterval);
+            
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft >= 0) {
+                   timerText.innerText = timeLeft;
                 }
             }, 1000);
         }
-
-        startBreathing();
     </script>
 </body>
 </html>
