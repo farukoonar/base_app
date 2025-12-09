@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eşit Hızlı Nefes Egzersizi</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 1. KATMAN: NEFES DAİRESİ */
+        .breathing-circle {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #4facfe 0%, #00f2fe 100%);
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0.8;
+            box-shadow: 0 0 30px rgba(79, 172, 254, 0.4);
+            
+            /* DÜZELTME BURADA: 'ease-in-out' yerine 'linear' yapıldı */
+            animation: breatheAnimation 19s linear infinite;
+        }
+
+        /* 2. KATMAN: SVG ÇEMBER */
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .track {
+            fill: none;
+            stroke: #333;
+            stroke-width: 8;
+        }
+
+        .progress-ring {
+            fill: none;
+            stroke: #fff;
+            stroke-width: 8;
+            stroke-linecap: round;
+            stroke-dasharray: 942;
+            stroke-dashoffset: 942;
+            /* Dış çizgi de sabit hızla dolsun diye linear */
+            animation: progressAnimation 19s linear infinite;
+        }
+
+        /* 3. KATMAN: YAZILAR */
+        .text-content {
+            position: absolute;
+            z-index: 3;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        h2 {
+            font-size: 24px;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .timer {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 5px 0 0 0;
+        }
+
+        /* --- KEYFRAMES --- */
+
+        @keyframes progressAnimation {
+            0% { stroke-dashoffset: 942; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        @keyframes breatheAnimation {
+            /* linear kullandığımız için artık noktalar arası geçişler
+               tamamen düz ve eşit hızda olacak.
+            */
+            0% { transform: scale(1); opacity: 0.5; }     /* Başlangıç */
+            21% { transform: scale(1.4); opacity: 1; }    /* 4. sn: Büyüdü */
+            58% { transform: scale(1.4); opacity: 1; }    /* 11. sn: Bekledi (Aynı boyutta kaldı) */
+            100% { transform: scale(1); opacity: 0.5; }   /* 19. sn: Küçüldü (Eşit hızla indi) */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="breathing-circle"></div>
+
+        <svg viewBox="0 0 320 320">
+            <circle class="track" cx="160" cy="160" r="150"></circle>
+            <circle class="progress-ring" cx="160" cy="160" r="150"></circle>
+        </svg>
+
+        <div class="text-content">
+            <h2 id="action-text">Hazır</h2>
+            <p class="timer" id="timer-text">0</p>
+        </div>
+    </div>
+
+    <script>
+        const actionText = document.getElementById('action-text');
+        const timerText = document.getElementById('timer-text');
+        
+        // 19 saniyelik fazlar
+        const phases = [
+            { name: "Nefes Al", duration: 4 },
+            { name: "Nefes Tut", duration: 7 },
+            { name: "Nefes Ver", duration: 8 }
+        ];
+
+        function startBreathing() {
+            runPhase(0);
+        }
+
+        function runPhase(index) {
+            if (index >= phases.length) index = 0;
+
+            const currentPhase = phases[index];
+            actionText.innerText = currentPhase.name;
+            
+            let timeLeft = currentPhase.duration;
+            timerText.innerText = timeLeft;
+
+            const countDownInterval = setInterval(() => {
+                timeLeft--;
+                timerText.innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countDownInterval);
+                    runPhase(index + 1);
+                }
+            }, 1000);
+        }
+
+        startBreathing();
+    </script>
+</body>
+</html>
